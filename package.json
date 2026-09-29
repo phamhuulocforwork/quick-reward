@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "quick-reward",
-  "description": "Adds a sidebar panel to the browser built with shadcn/ui components.",
+  "description": "Auto-redeem Delta Force gift codes from OCR/URL on Garena redeem page.",
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,134 @@
-console.log(
-  '[From the background context] Hello from the background worker/script!'
-)
+import {
+  PENDING_BATCH_KEY,
+  REDEEM_MATCH,
+  REDEEM_URL,
+  SETTINGS_KEY,
+  clampDelay,
+  parseOpenIdFromCookie
+} from './lib/redeem'
+
+async function focusTab(tab: chrome.tabs.Tab) {
+  if (tab.id === undefined) return
+  await chrome.tabs.update(tab.id, {active: true})
+  if (tab.windowId !== undefined) {
+    await chrome.windows.update(tab.windowId, {focused: true})
+  }
+}
+
+async function getOpenIdFromCookies(): Promise<string | null> {
+  const cookies = await chrome.cookies.getAll({url: REDEEM_URL})
+  for (const c of cookies) {
+    if (c.name === 'user_info') {
+      const openid = parseOpenIdFromCookie(`${c.name}=${c.value}`)
+      if (openid) return openid
+    }
+    try {
+      const raw = decodeURIComponent(c.value)
+      const data = JSON.parse(raw) as {openid?: unknown}
+      if (typeof data.openid === 'string' && data.openid) return data.openid
+    } catch {
+      // not JSON
+    }
+  }
+  return null
+}
+
+async function openRedeemPage(): Promise<{ok: true; mode: 'focus' | 'new'}> {
+  const tabs = await chrome.tabs.query({url: REDEEM_MATCH})
+  const tab = tabs.find((t) => t.id !== undefined)
+  if (tab) {
+    await focusTab(tab)
+    return {ok: true, mode: 'focus'}
+  }
+  await chrome.tabs.create({url: REDEEM_URL, active: true})
+  return {ok: true, mode: 'new'}
+}
+
+async function startBatchFromSidebar(text: string, delayMs: number) {
+  const ms = clampDelay(delayMs)
+  await chrome.storage.local.set({
+    [SETTINGS_KEY]: {delayMs: ms},
+    [PENDING_BATCH_KEY]: {text, delayMs: ms, createdAt: Date.now()}
+  })
+
+  const tabs = await chrome.tabs.query({url: REDEEM_MATCH})
+  const tab = tabs.find((t) => t.id !== undefined)
+  if (tab?.id !== undefined) {
+    try {
+      const res = await chrome.tabs.sendMessage(tab.id, {
+        type: 'qr:start',
+        text,
+        delayMs: ms
+      })
+      if (res?.ok === false && res.error === 'Đang đổi code rồi.') {
+        await chrome.storage.local.remove(PENDING_BATCH_KEY)
+        return {ok: false as const, error: res.error as string}
+      }
+      await chrome.storage.local.remove(PENDING_BATCH_KEY)
+      await focusTab(tab)
+      return {ok: true as const, mode: 'direct' as const}
+    } catch {
+      await chrome.tabs.reload(tab.id)
+      await focusTab(tab)
+      return {ok: true as const, mode: 'reload' as const}
+    }
+  }
+
+  await chrome.tabs.create({url: REDEEM_URL, active: true})
+  return {ok: true as const, mode: 'new' as const}
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || sender.id !== chrome.runtime.id) return undefined
+
+  if (msg.type === 'qr:batchStart') {
+    const text = typeof msg.text === 'string' ? msg.text : ''
+    const delayMs =
+      typeof msg.delayMs === 'number' ? msg.delayMs : clampDelay(3000)
+    if (!text.trim()) {
+      sendResponse({ok: false, error: 'Chưa có nội dung code.'})
+      return false
+    }
+    startBatchFromSidebar(text, delayMs).then(sendResponse, (err) => {
+      sendResponse({
+        ok: false,
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
+    return true
+  }
+
+  if (msg.type === 'qr:openRedeem') {
+    openRedeemPage().then(sendResponse, (err) => {
+      sendResponse({
+        ok: false,
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
+    return true
+  }
+
+  if (msg.type === 'qr:getOpenId') {
+    getOpenIdFromCookies().then(
+      (openid) => sendResponse({openid}),
+      () => sendResponse({openid: null})
+    )
+    return true
+  }
+
+  if (msg.type === 'qr:sleep') {
+    const ms = Math.min(Math.max(Number(msg.ms) || 0, 0), 30000)
+    setTimeout(() => sendResponse({ok: true}), ms)
+    return true
+  }
+
+  if (msg.type === 'qr:whoami') {
+    sendResponse({tabId: sender.tab?.id ?? null})
+    return undefined
+  }
+
+  return undefined
+})
 
 // Named one by one so the bundler can fold each build down to a single
 // branch. waterfox and librewolf are gecko, and used to fall to chromium.
