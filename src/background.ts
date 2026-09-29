@@ -1,6 +1,19 @@
-console.log(
-  '[From the background context] Hello from the background worker/script!'
-)
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || sender.id !== chrome.runtime.id) return undefined
+
+  if (msg.type === 'qr:sleep') {
+    const ms = Math.min(Math.max(Number(msg.ms) || 0, 0), 30000)
+    setTimeout(() => sendResponse({ok: true}), ms)
+    return true
+  }
+
+  if (msg.type === 'qr:whoami') {
+    sendResponse({tabId: sender.tab?.id ?? null})
+    return undefined
+  }
+
+  return undefined
+})
 
 // Named one by one so the bundler can fold each build down to a single
 // branch. waterfox and librewolf are gecko, and used to fall to chromium.

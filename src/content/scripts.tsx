@@ -1,8 +1,7 @@
 import ReactDOM from 'react-dom/client'
 import ContentApp from './ContentApp'
+import {initRedeemer} from './redeemer'
 import './styles.css'
-
-console.log('[From the page context] Hello from content_scripts!')
 
 /**
  * Extension.js content_script entrypoint. The framework calls this on
@@ -10,6 +9,8 @@ console.log('[From the page context] Hello from content_scripts!')
  * Do not invoke it yourself.
  */
 export default function initial() {
+  void initRedeemer()
+
   const rootDiv = document.createElement('div')
   rootDiv.setAttribute('data-extension-root', 'true')
   // Isolate the host from page styles (e.g. example.com ships div{opacity:.8},

@@ -7,14 +7,12 @@
     "gecko": {
       "id": "quick-reward@extension.js",
       "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
+        "required": ["none"]
       }
     }
   },
-  "name": "quick-reward",
-  "description": "Adds a sidebar panel to the browser built with shadcn/ui components.",
+  "name": "Quick Reward",
+  "description": "Tự động đổi gift code Delta Force từ OCR (Hyprland) qua URL #qr= trên trang Garena.",
   "icons": {
     "16": "images/icon-16.png",
     "32": "images/icon-32.png",
@@ -30,7 +28,7 @@
       "64": "images/icon-64.png",
       "128": "images/icon-128.png"
     },
-    "default_title": "Open Extension.js Shadcn Sidebar"
+    "default_title": "Quick Reward — Lịch sử đổi code"
   },
   "firefox:action": {
     "default_icon": {
@@ -40,34 +38,35 @@
       "64": "images/icon-64.png",
       "128": "images/icon-128.png"
     },
-    "default_title": "Open Extension.js Shadcn Sidebar"
+    "default_title": "Quick Reward — Lịch sử đổi code"
   },
   "chromium:side_panel": {
     "default_path": "sidebar/index.html",
-    "default_title": "Extension.js Shadcn Sidebar Panel"
+    "default_title": "Quick Reward"
   },
   "firefox:sidebar_action": {
     "default_panel": "sidebar/index.html",
-    "default_title": "Extension.js Shadcn Sidebar Panel",
+    "default_title": "Quick Reward",
     "browser_style": false
   },
-  "chromium:permissions": [
-    "sidePanel"
-  ],
+  "permissions": ["storage"],
+  "chromium:permissions": ["sidePanel", "storage"],
+  "host_permissions": ["https://redeem.df.garena.sg/*"],
   "background": {
     "chromium:service_worker": "background.ts",
-    "firefox:scripts": [
-      "background.ts"
-    ]
+    "firefox:scripts": ["background.ts"]
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content/scripts.tsx"
-      ]
+      "matches": ["https://redeem.df.garena.sg/*"],
+      "js": ["content/page-hook.ts"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://redeem.df.garena.sg/*"],
+      "js": ["content/scripts.tsx"],
+      "run_at": "document_idle"
     }
   ]
 }

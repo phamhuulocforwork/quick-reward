@@ -1,51 +1,175 @@
 .content_script {
-  position: absolute;
-  right: 0.75rem;
-  bottom: 0.75rem;
-  z-index: 9999;
-}
-
-.content_pill {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  appearance: none;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--sidebar-bg, #0a0c10);
-  color: var(--sidebar-text, #c9c9c9);
-  padding: 0.5rem 1rem 0.5rem 0.5rem;
-  border-radius: 9999px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-}
-
-.content_pill:not(.content_pill_static):hover {
-  background: #11151c;
-}
-
-.content_pill_logo {
-  height: 1.5rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.08);
-  object-fit: contain;
-  aspect-ratio: 1 / 1;
-  padding: 0.125rem;
-}
-
-.content_pill_text {
-  font-size: 0.85rem;
-  font-weight: 600;
-  line-height: 1;
+  all: initial;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, 'Noto Sans', sans-serif;
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
-/* The gecko build renders this hint in place of the pill, so it must not read
-   as a control: no pointer cursor and no hover response. */
-.content_pill_static {
-  cursor: default;
+.qr-overlay {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483646;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(70vh, 480px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #0fda85;
+  background: #0a0a0a;
+  color: #fff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  box-sizing: border-box;
+}
+
+.qr-overlay__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.qr-overlay__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.qr-overlay__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0fda85;
+}
+
+.qr-overlay__sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.qr-overlay__close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.qr-overlay__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.qr-row--active {
+  outline: 1px solid #0fda85;
+  background: rgba(15, 218, 133, 0.08);
+}
+
+.qr-code {
+  font-size: 12px;
+  color: #fff;
+  word-break: break-all;
+}
+
+.qr-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.qr-chip--success {
+  background: rgba(15, 218, 133, 0.25);
+  color: #0fda85;
+}
+
+.qr-chip--used {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.qr-chip--invalid {
+  background: rgba(255, 180, 80, 0.2);
+  color: #ffb450;
+}
+
+.qr-chip--pending {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.qr-chip--network,
+.qr-chip--error,
+.qr-chip--session,
+.qr-chip--fatal,
+.qr-chip--stopped {
+  background: rgba(255, 80, 80, 0.2);
+  color: #ff8a8a;
+}
+
+.qr-overlay__note {
+  margin: 0;
+  font-size: 11px;
+  color: #ffb450;
+  line-height: 1.4;
+}
+
+.qr-overlay__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.qr-overlay__stats {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.qr-overlay__hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.qr-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #0fda85;
+  color: #000;
+}
+
+.qr-btn:hover {
+  filter: brightness(1.05);
 }
